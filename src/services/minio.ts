@@ -8,7 +8,7 @@ export interface MinioConfig {
 }
 
 // Giả lập MinIO client vì không thể import trực tiếp trong browser
-export class MinioService {d
+export class MinioService {
   private config: MinioConfig;
 
   constructor(config: MinioConfig) {

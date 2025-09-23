@@ -11,6 +11,11 @@ import CareerPaths from './pages/CareerPaths';
 import PersonalTracking from './pages/PersonalTracking';
 import Departments from './pages/Departments';
 import Settings from './pages/Settings';
+import TestPage from './pages/TestPage';
+import Upload from './pages/Upload';
+import CareerRoadmap from './pages/CareerRoadmap';
+import DevelopmentMatrix from './pages/DevelopmentMatrix';
+import CareerMatrix from './pages/CareerMatrix';
 
 // Custom theme cho Ant Design
 const theme = {
@@ -74,8 +79,13 @@ function App() {
                   <Route path="/employees" element={<Employees />} />
                   <Route path="/career-paths" element={<CareerPaths />} />
                   <Route path="/personal-tracking" element={<PersonalTracking />} />
+                  <Route path="/career-roadmap" element={<CareerRoadmap />} />
+                  <Route path="/development-matrix" element={<DevelopmentMatrix />} />
+                  <Route path="/career-matrix" element={<CareerMatrix />} />
                   <Route path="/departments" element={<Departments />} />
+                  <Route path="/upload" element={<Upload />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/test" element={<TestPage />} />
                 </Routes>
               </MainLayout>
             </ProtectedRoute>

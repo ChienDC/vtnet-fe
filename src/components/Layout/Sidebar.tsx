@@ -70,6 +70,11 @@ const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
       icon: <SettingOutlined />,
       label: 'Cài đặt',
     },
+    {
+      key: '/test',
+      icon: <SettingOutlined />,
+      label: 'Test API',
+    },
   ];
 
   const handleMenuClick = ({ key }: { key: string }) => {

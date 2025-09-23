@@ -44,19 +44,85 @@ const DevelopmentMatrix: React.FC = () => {
     loadData();
   }, []);
 
+  // Mock data
+  const mockEmployees: Employee[] = [
+    {
+      id: '1',
+      employeeCode: 'VT001',
+      fullName: 'Nguyễn Văn An',
+      email: 'an.nguyen@vtnet.vn',
+      phone: '0901234567',
+      department: 'Công nghệ thông tin',
+      position: 'Kỹ sư phần mềm',
+      level: 'Bậc 12',
+      joinDate: '2022-01-15',
+      status: 'active',
+      manager: 'Trần Văn B',
+      skills: ['React', 'Node.js', 'TypeScript', 'AWS'],
+      certifications: [],
+      careerPath: {
+        id: '1',
+        employeeId: '1',
+        currentLevel: 'Bậc 12',
+        targetLevel: 'Bậc 14',
+        department: 'Công nghệ thông tin',
+        profession: 'Phát triển phần mềm',
+        progressPercentage: 65,
+        milestones: [],
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-20'
+      }
+    }
+  ];
+
+  const mockMatrices: PersonalDevelopmentMatrix[] = [
+    {
+      id: '1',
+      employeeId: '1',
+      department: 'QUẢN LÝ TÁC ĐỘNG',
+      profession: 'VẬN HÀNH KHAI THÁC',
+      currentLevel: 'B12',
+      targetLevel: 'B14',
+      positions: [
+        {
+          id: '1',
+          title: 'Quản lý bảo dưỡng',
+          level: 'B11',
+          status: 'completed',
+          progress: 100,
+          completedDate: '2023-06-15',
+          requirements: [
+            { id: '1', title: 'Kinh nghiệm bảo dưỡng 2 năm', type: 'experience', status: 'completed', progress: 100, description: 'Có kinh nghiệm bảo dưỡng hệ thống', completedDate: '2023-06-15' },
+            { id: '2', title: 'Chứng chỉ kỹ thuật', type: 'certification', status: 'completed', progress: 100, description: 'Chứng chỉ kỹ thuật cơ bản', completedDate: '2023-06-15' }
+          ]
+        },
+        {
+          id: '2',
+          title: 'Phó phòng Quản lý thay đổi',
+          level: 'B14',
+          status: 'target',
+          progress: 65,
+          estimatedDate: '2024-12-31',
+          requirements: [
+            { id: '3', title: 'Chứng chỉ ITIL Foundation', type: 'certification', status: 'completed', progress: 100, description: 'Chứng chỉ ITIL cơ bản', completedDate: '2024-03-20' },
+            { id: '4', title: 'Kinh nghiệm quản lý team', type: 'experience', status: 'in_progress', progress: 70, description: 'Quản lý team 5+ người' },
+            { id: '5', title: 'Khóa học Leadership', type: 'training', status: 'completed', progress: 100, description: 'Khóa học lãnh đạo', completedDate: '2024-05-15' }
+          ]
+        }
+      ],
+      createdAt: '2024-01-01',
+      updatedAt: '2024-07-01'
+    }
+  ];
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const employeesData = await employeeAPI.getEmployees();
-      setEmployees(employeesData);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Load development matrices for all employees
-      const matricesPromises = employeesData.map(emp => 
-        careerAPI.getPersonalDevelopmentMatrix(emp.id)
-      );
-      const matricesResults = await Promise.all(matricesPromises);
-      const validMatrices = matricesResults.filter(matrix => matrix !== null) as PersonalDevelopmentMatrix[];
-      setMatrices(validMatrices);
+      setEmployees(mockEmployees);
+      setMatrices(mockMatrices);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
