@@ -8,6 +8,8 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
+import { logout, getUserFromStorage } from '../../services/authService';
+import { message } from 'antd';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -44,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
   const handleUserMenuClick = ({ key }: { key: string }) => {
     switch (key) {
       case 'logout':
-        console.log('Đăng xuất');
+        handleLogout();
         break;
       case 'profile':
         console.log('Xem profile');
@@ -54,6 +56,16 @@ const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
         break;
     }
   };
+
+  const handleLogout = () => {
+    logout();
+    message.success('Đăng xuất thành công');
+    window.location.href = '/auth';
+  };
+
+  // Get user info from localStorage
+  const user = getUserFromStorage();
+  const userName = user?.fullName || user?.email || 'Admin';
 
   return (
     <AntHeader 
@@ -83,7 +95,7 @@ const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
       />
       
       <Space style={{ marginRight: 24 }}>
-        <Text style={{ fontWeight: 500, color: '#374151' }}>Xin chào, Admin</Text>
+        <Text style={{ fontWeight: 500, color: '#374151' }}>Xin chào, {userName}</Text>
         <Dropdown 
           menu={{ 
             items: userMenuItems,

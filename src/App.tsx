@@ -2,22 +2,15 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import locale from 'antd/locale/vi_VN';
-import MainLayout from './components/Layout/MainLayout';
+import { isLoggedIn } from './services/authService';
+import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
+import MainLayout from './components/Layout/MainLayout';
 import Employees from './pages/Employees';
 import CareerPaths from './pages/CareerPaths';
-import CareerMatrix from './pages/CareerMatrix';
-import Departments from './pages/Departments';
-import Upload from './pages/Upload';
-import Settings from './pages/Settings';
-import EmployeeView from './pages/EmployeeView';
 import PersonalTracking from './pages/PersonalTracking';
-import PersonalTrackingDetail from './pages/PersonalTrackingDetail';
-import DevelopmentMatrix from './pages/DevelopmentMatrix';
-import DevelopmentMatrixDetail from './pages/DevelopmentMatrixDetail';
-import CareerRoadmap from './pages/CareerRoadmap';
-import CareerRoadmapDetail from './pages/CareerRoadmapDetail';
-import JobComparison from './pages/JobComparison';
+import Departments from './pages/Departments';
+import Settings from './pages/Settings';
 
 // Custom theme cho Ant Design
 const theme = {
@@ -54,33 +47,40 @@ const theme = {
   },
 };
 
+// Protected Route component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return isLoggedIn() ? <>{children}</> : <Navigate to="/auth" replace />;
+};
+
 function App() {
+  console.log('App component rendering...');
+  
   return (
     <ConfigProvider 
       locale={locale} 
       theme={theme}
     >
       <Router>
-        <MainLayout>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/employees" element={<Employees />} />
-            <Route path="/employees/:id" element={<EmployeeView />} />
-            <Route path="/career-paths" element={<CareerPaths />} />
-            <Route path="/personal-tracking" element={<PersonalTracking />} />
-            <Route path="/personal-tracking/:employeeId" element={<PersonalTrackingDetail />} />
-            <Route path="/career-roadmap" element={<CareerRoadmap />} />
-            <Route path="/career-roadmap/:professionId" element={<CareerRoadmapDetail />} />
-            <Route path="/job-comparison" element={<JobComparison />} />
-            <Route path="/development-matrix" element={<DevelopmentMatrix />} />
-            <Route path="/development-matrix/:employeeId" element={<DevelopmentMatrixDetail />} />
-            <Route path="/career-matrix" element={<CareerMatrix />} />
-            <Route path="/departments" element={<Departments />} />
-            <Route path="/upload" element={<Upload />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </MainLayout>
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={
+            isLoggedIn() ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth" replace />
+          } />
+          <Route path="/*" element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Routes>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/employees" element={<Employees />} />
+                  <Route path="/career-paths" element={<CareerPaths />} />
+                  <Route path="/personal-tracking" element={<PersonalTracking />} />
+                  <Route path="/departments" element={<Departments />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Routes>
+              </MainLayout>
+            </ProtectedRoute>
+          } />
+        </Routes>
       </Router>
     </ConfigProvider>
   );
