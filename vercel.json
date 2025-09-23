@@ -1,47 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
-    }
-  ],
-  "functions": {
-    "src/pages/api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  },
-  "routes": [
-    {
-      "src": "/auth",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/dashboard",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/employees",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/career-paths",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/personal-tracking",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/departments",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/settings",
-      "dest": "/index.html"
     }
   ]
 }

@@ -98,28 +98,6 @@ const loadDatabaseModule = async () => {
   }
 };
 
-// API functions for Vercel
-const callVercelAPI = async (endpoint: string, data: any) => {
-  try {
-    const response = await fetch(`/api/auth/${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`Vercel API ${endpoint} error:`, error);
-    throw error;
-  }
-};
-
 // Try to save to database
 const trySaveToDatabase = async (userData: RegisterData): Promise<{ success: boolean; user?: User; message: string }> => {
   try {
@@ -221,27 +199,9 @@ export const login = async (loginData: LoginData): Promise<AuthResponse> => {
       };
     }
 
-    // If on Vercel, use API
+    // If on Vercel, skip database and use localStorage directly
     if (isVercel) {
-      try {
-        const apiResult = await callVercelAPI('login', { email, password });
-        if (apiResult.success && apiResult.user) {
-          const token = generateToken(apiResult.user.id, apiResult.user.email);
-
-          localStorage.setItem('authToken', token);
-          localStorage.setItem('isLoggedIn', 'true');
-          localStorage.setItem('user', JSON.stringify(apiResult.user));
-
-          return {
-            success: true,
-            message: apiResult.message,
-            user: apiResult.user,
-            token
-          };
-        }
-      } catch (apiError) {
-        console.log('⚠️ Vercel API failed, falling back to localStorage');
-      }
+      console.log('🌐 Running on Vercel - using localStorage only');
     }
 
     // Try database first (for local development)
@@ -349,20 +309,9 @@ export const register = async (registerData: RegisterData): Promise<AuthResponse
       };
     }
 
-    // If on Vercel, use API
+    // If on Vercel, skip database and use localStorage directly
     if (isVercel) {
-      try {
-        const apiResult = await callVercelAPI('register', { email, password, fullName, phone });
-        if (apiResult.success && apiResult.user) {
-          return {
-            success: true,
-            message: apiResult.message,
-            user: apiResult.user
-          };
-        }
-      } catch (apiError) {
-        console.log('⚠️ Vercel API failed, falling back to localStorage');
-      }
+      console.log('🌐 Running on Vercel - using localStorage only');
     }
 
     // Try database first (for local development)
