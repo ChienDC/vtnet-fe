@@ -49,7 +49,7 @@ const theme = {
 
 // Protected Route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return isLoggedIn() ? <>{children}</> : <Navigate to="/auth" replace />;
+  return isLoggedIn() ? <>{children}</> : <Navigate to="/" replace />;
 };
 
 function App() {

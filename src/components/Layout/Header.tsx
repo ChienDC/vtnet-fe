@@ -60,7 +60,8 @@ const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
   const handleLogout = () => {
     logout();
     message.success('Đăng xuất thành công');
-    window.location.href = '/auth';
+    // Redirect to root path, App.tsx will handle routing to /auth
+    window.location.href = '/';
   };
 
   // Get user info from localStorage
