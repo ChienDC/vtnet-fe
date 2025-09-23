@@ -76,6 +76,9 @@ const saveUsersToStorage = (users: User[]): void => {
   localStorage.setItem('registeredUsers', JSON.stringify(users));
 };
 
+// Check if running on Vercel
+const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+
 // Database functions (lazy loading)
 let databaseModule: any = null;
 let isDatabaseAvailable = false;
@@ -92,6 +95,28 @@ const loadDatabaseModule = async () => {
     console.log('⚠️ Database module not available, using localStorage fallback');
     isDatabaseAvailable = false;
     return null;
+  }
+};
+
+// API functions for Vercel
+const callVercelAPI = async (endpoint: string, data: any) => {
+  try {
+    const response = await fetch(`/api/auth/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Vercel API ${endpoint} error:`, error);
+    throw error;
   }
 };
 
@@ -196,7 +221,30 @@ export const login = async (loginData: LoginData): Promise<AuthResponse> => {
       };
     }
 
-    // Try database first
+    // If on Vercel, use API
+    if (isVercel) {
+      try {
+        const apiResult = await callVercelAPI('login', { email, password });
+        if (apiResult.success && apiResult.user) {
+          const token = generateToken(apiResult.user.id, apiResult.user.email);
+
+          localStorage.setItem('authToken', token);
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('user', JSON.stringify(apiResult.user));
+
+          return {
+            success: true,
+            message: apiResult.message,
+            user: apiResult.user,
+            token
+          };
+        }
+      } catch (apiError) {
+        console.log('⚠️ Vercel API failed, falling back to localStorage');
+      }
+    }
+
+    // Try database first (for local development)
     const dbResult = await tryLoginFromDatabase(email, password);
     if (dbResult.success && dbResult.user) {
       const token = generateToken(dbResult.user.id, dbResult.user.email);
@@ -301,7 +349,23 @@ export const register = async (registerData: RegisterData): Promise<AuthResponse
       };
     }
 
-    // Try database first
+    // If on Vercel, use API
+    if (isVercel) {
+      try {
+        const apiResult = await callVercelAPI('register', { email, password, fullName, phone });
+        if (apiResult.success && apiResult.user) {
+          return {
+            success: true,
+            message: apiResult.message,
+            user: apiResult.user
+          };
+        }
+      } catch (apiError) {
+        console.log('⚠️ Vercel API failed, falling back to localStorage');
+      }
+    }
+
+    // Try database first (for local development)
     const dbResult = await trySaveToDatabase(registerData);
     if (dbResult.success && dbResult.user) {
       return {
