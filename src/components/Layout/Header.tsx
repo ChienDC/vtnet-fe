@@ -10,6 +10,7 @@ import {
 import type { MenuProps } from 'antd';
 import { logout, getUserFromStorage } from '../../services/authService';
 import { message } from 'antd';
+import { useNavigate } from 'react-router-dom';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -20,6 +21,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
+  const navigate = useNavigate();
+
   // Menu dropdown cho user
   const userMenuItems: MenuProps['items'] = [
     {
@@ -61,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({ collapsed, onToggle }) => {
     logout();
     message.success('Đăng xuất thành công');
     // Redirect to root path, App.tsx will handle routing to /auth
-    window.location.href = '/';
+    navigate('/');
   };
 
   // Get user info from localStorage
