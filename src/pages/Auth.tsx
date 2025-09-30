@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Form, Input, Button, Typography, message, Tabs } from 'antd';
-import { UserOutlined, LockOutlined, LoginOutlined, UserAddOutlined, PhoneOutlined } from '@ant-design/icons';
+import { Card, Form, Input, Button, Typography, message, Tabs, Alert } from 'antd';
+import { UserOutlined, LockOutlined, LoginOutlined, UserAddOutlined, PhoneOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { login, register, LoginData, RegisterData } from '../services/authService';
 
@@ -13,6 +13,9 @@ const Auth: React.FC = () => {
   const navigate = useNavigate();
   const [loginForm] = Form.useForm();
   const [registerForm] = Form.useForm();
+
+  // Check if auth is disabled
+  const AUTH_DISABLED = true; // This should match the flag in authService.ts
 
   const onLoginFinish = async (values: LoginData) => {
     console.log('Login form submitted:', values);
@@ -119,6 +122,17 @@ const Auth: React.FC = () => {
             Hệ thống Quản lý Sự nghiệp
           </Text>
         </div>
+
+        {AUTH_DISABLED && (
+          <Alert
+            message="Chức năng đăng nhập tạm thời bị vô hiệu hóa"
+            description="Hiện tại hệ thống đang chạy ở chế độ bypass authentication. Mọi thao tác đăng nhập sẽ được tự động chấp nhận."
+            type="warning"
+            icon={<ExclamationCircleOutlined />}
+            style={{ marginBottom: 24 }}
+            showIcon
+          />
+        )}
 
         <Tabs 
           activeKey={activeTab} 

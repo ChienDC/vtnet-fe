@@ -79,6 +79,9 @@ const saveUsersToStorage = (users: User[]): void => {
 // Check if running on Vercel
 const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
 
+// Temporary flag to disable authentication
+const AUTH_DISABLED = true; // Set to true to temporarily disable auth
+
 // Database functions (lazy loading)
 let databaseModule: any = null;
 let isDatabaseAvailable = false;
@@ -190,6 +193,32 @@ const tryLoginFromDatabase = async (email: string, password: string): Promise<{ 
 // Login function
 export const login = async (loginData: LoginData): Promise<AuthResponse> => {
   try {
+    // If auth is disabled, return success immediately
+    if (AUTH_DISABLED) {
+      const mockUser: User = {
+        id: 1,
+        email: 'admin@vtnet.com',
+        fullName: 'Admin User',
+        phone: '0123456789',
+        role: 'admin',
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      const token = generateToken(mockUser.id, mockUser.email);
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      
+      return {
+        success: true,
+        message: 'Authentication disabled - Auto login',
+        user: mockUser,
+        token
+      };
+    }
+
     const { email, password } = loginData;
 
     if (!email || !password) {
@@ -285,6 +314,26 @@ export const login = async (loginData: LoginData): Promise<AuthResponse> => {
 // Register function
 export const register = async (registerData: RegisterData): Promise<AuthResponse> => {
   try {
+    // If auth is disabled, return success immediately
+    if (AUTH_DISABLED) {
+      const mockUser: User = {
+        id: 1,
+        email: 'admin@vtnet.com',
+        fullName: 'Admin User',
+        phone: '0123456789',
+        role: 'admin',
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      return {
+        success: true,
+        message: 'Authentication disabled - Registration bypassed',
+        user: mockUser
+      };
+    }
+
     const { email, password, fullName, phone } = registerData;
 
     if (!email || !password || !fullName) {
@@ -378,6 +427,21 @@ export const logout = (): void => {
 // Get current user from token
 export const getCurrentUser = async (): Promise<User | null> => {
   try {
+    // If auth is disabled, return mock user
+    if (AUTH_DISABLED) {
+      const mockUser: User = {
+        id: 1,
+        email: 'admin@vtnet.com',
+        fullName: 'Admin User',
+        phone: '0123456789',
+        role: 'admin',
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      return mockUser;
+    }
+
     const token = localStorage.getItem('authToken');
     if (!token) return null;
 
@@ -403,6 +467,11 @@ export const getCurrentUser = async (): Promise<User | null> => {
 
 // Check if user is logged in
 export const isLoggedIn = (): boolean => {
+  // If auth is disabled, always return true
+  if (AUTH_DISABLED) {
+    return true;
+  }
+  
   const token = localStorage.getItem('authToken');
   const isLoggedInFlag = localStorage.getItem('isLoggedIn');
   
