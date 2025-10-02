@@ -22,7 +22,27 @@ import {
   ArrowRightOutlined,
   ClearOutlined,
 } from '@ant-design/icons';
-import { supabase, safeSupabaseCall, mockData } from '../../lib/supabase';
+// Mock data for development
+const mockData = {
+  career_matrix_templates: [
+    { 
+      id: 'mock-1', 
+      name: 'Lộ trình Phát triển Phần mềm', 
+      department: 'Công nghệ thông tin', 
+      profession: 'Kỹ sư phần mềm',
+      created_at: new Date().toISOString() 
+    },
+    { 
+      id: 'mock-2', 
+      name: 'Lộ trình Quản lý Dự án', 
+      department: 'Quản lý', 
+      profession: 'Project Manager',
+      created_at: new Date().toISOString() 
+    },
+  ],
+  career_matrix_cells: [],
+  career_matrix_arrows: [],
+};
 
 const { Option } = Select;
 
@@ -132,16 +152,9 @@ const ManagementMatrix: React.FC = () => {
 
   const loadMatrices = async () => {
     try {
-      const { data, error } = await safeSupabaseCall(
-        () => supabase
-          .from('career_matrix_templates')
-          .select('*')
-          .order('created_at', { ascending: false }),
-        mockData.career_matrix_templates
-      );
-
-      if (error) throw error;
-
+      // Sử dụng mock data trực tiếp
+      const data = mockData.career_matrix_templates;
+      
       setMatrices(data || []);
       if (data && data.length > 0 && !currentMatrixId) {
         setCurrentMatrixId(data[0].id);
@@ -155,12 +168,9 @@ const ManagementMatrix: React.FC = () => {
   const loadMatrixData = async (matrixId: string) => {
     setIsLoading(true);
     try {
-      const { data: cellsData, error: cellsError } = await supabase
-        .from('career_matrix_cells')
-        .select('*')
-        .eq('matrix_id', matrixId);
-
-      if (cellsError) throw cellsError;
+      // Sử dụng mock data trực tiếp
+      const cellsData = mockData.career_matrix_cells;
+      const arrowsData = mockData.career_matrix_arrows;
 
       const loadedCells: Cell[] = (cellsData || []).map((cell: any) => ({
         id: cell.id,
@@ -174,13 +184,6 @@ const ManagementMatrix: React.FC = () => {
       }));
 
       setCells(loadedCells);
-
-      const { data: arrowsData, error: arrowsError } = await supabase
-        .from('career_matrix_arrows')
-        .select('*')
-        .eq('matrix_id', matrixId);
-
-      if (arrowsError) throw arrowsError;
 
       const loadedArrows: Arrow[] = (arrowsData || []).map((arrow: any) => ({
         id: arrow.id,
