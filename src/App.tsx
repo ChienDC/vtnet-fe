@@ -87,35 +87,48 @@ const theme = {
 };
 
 function App() {
-  return (
-    <ConfigProvider 
-      locale={locale} 
-      theme={theme}
-    >
-      <Router>
-        <MainLayout>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/employees" element={<Employees />} />
-            <Route path="/employees/:id" element={<EmployeeView />} />
-            <Route path="/career-paths" element={<CareerPaths />} />
-            <Route path="/personal-tracking" element={<PersonalTracking />} />
-            <Route path="/personal-tracking/:employeeId" element={<PersonalTrackingDetail />} />
-            <Route path="/career-roadmap" element={<CareerRoadmap />} />
-            <Route path="/career-roadmap/:professionId" element={<CareerRoadmapDetail />} />
-            <Route path="/job-comparison" element={<JobComparison />} />
-            <Route path="/development-matrix" element={<DevelopmentMatrix />} />
-            <Route path="/development-matrix/:employeeId" element={<DevelopmentMatrixDetail />} />
-            <Route path="/career-matrix" element={<CareerMatrix />} />
-            <Route path="/departments" element={<Departments />} />
-            <Route path="/upload" element={<Upload />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </MainLayout>
-      </Router>
-    </ConfigProvider>
-  );
+  try {
+    return (
+      <ConfigProvider 
+        locale={locale} 
+        theme={theme}
+      >
+        <Router>
+          <MainLayout>
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/employees" element={<Employees />} />
+              <Route path="/employees/:id" element={<EmployeeView />} />
+              <Route path="/career-paths" element={<CareerPaths />} />
+              <Route path="/personal-tracking" element={<PersonalTracking />} />
+              <Route path="/personal-tracking/:employeeId" element={<PersonalTrackingDetail />} />
+              <Route path="/career-roadmap" element={<CareerRoadmap />} />
+              <Route path="/career-roadmap/:professionId" element={<CareerRoadmapDetail />} />
+              <Route path="/job-comparison" element={<JobComparison />} />
+              <Route path="/development-matrix" element={<DevelopmentMatrix />} />
+              <Route path="/development-matrix/:employeeId" element={<DevelopmentMatrixDetail />} />
+              <Route path="/career-matrix" element={<CareerMatrix />} />
+              <Route path="/departments" element={<Departments />} />
+              <Route path="/upload" element={<Upload />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
+          </MainLayout>
+        </Router>
+      </ConfigProvider>
+    );
+  } catch (error) {
+    console.error('App Error:', error);
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h1>Có lỗi xảy ra</h1>
+        <p>Vui lòng kiểm tra console để xem chi tiết lỗi.</p>
+        <pre style={{ textAlign: 'left', background: '#f5f5f5', padding: '10px' }}>
+          {error instanceof Error ? error.message : String(error)}
+        </pre>
+      </div>
+    );
+  }
 }
 
 export default App;

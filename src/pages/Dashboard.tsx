@@ -5,8 +5,7 @@ import {
   RiseOutlined, 
   CheckCircleOutlined,
   FileTextOutlined,
-  LoadingOutlined,
-  TeamOutlined 
+  LoadingOutlined
 } from '@ant-design/icons';
 import { dashboardAPI, employeeAPI } from '../services/api';
 import { DashboardStats, Employee } from '../types';
@@ -106,7 +105,6 @@ const Dashboard: React.FC = () => {
               value={stats?.totalEmployees || 0}
               prefix={<UserOutlined />}
               valueStyle={{ color: '#EF0032', fontWeight: 'bold', fontSize: '28px' }}
-              titleStyle={{ color: '#6b7280', fontWeight: '500' }}
             />
             </div>
           </Card>
@@ -119,7 +117,6 @@ const Dashboard: React.FC = () => {
               value={stats?.activeCareerPaths || 0}
               prefix={<RiseOutlined />}
               valueStyle={{ color: '#176FEE', fontWeight: 'bold', fontSize: '28px' }}
-              titleStyle={{ color: '#6b7280', fontWeight: '500' }}
             />
             </div>
           </Card>
@@ -132,7 +129,6 @@ const Dashboard: React.FC = () => {
               value={stats?.completedMilestones || 0}
               prefix={<CheckCircleOutlined />}
               valueStyle={{ color: '#489242', fontWeight: 'bold', fontSize: '28px' }}
-              titleStyle={{ color: '#6b7280', fontWeight: '500' }}
             />
             </div>
           </Card>
@@ -145,7 +141,6 @@ const Dashboard: React.FC = () => {
               value={stats?.pendingCertifications || 0}
               prefix={<FileTextOutlined />}
               valueStyle={{ color: '#028599', fontWeight: 'bold', fontSize: '28px' }}
-              titleStyle={{ color: '#6b7280', fontWeight: '500' }}
             />
             </div>
           </Card>
