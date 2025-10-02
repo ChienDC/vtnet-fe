@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ConfigProvider } from 'antd';
 import locale from 'antd/locale/vi_VN';
 import MainLayout from './components/Layout/MainLayout';
+import ErrorBoundary from './components/ErrorBoundary';
+import DebugInfo from './components/DebugInfo';
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
 import CareerPaths from './pages/CareerPaths';
@@ -87,8 +89,8 @@ const theme = {
 };
 
 function App() {
-  try {
-    return (
+  return (
+    <ErrorBoundary>
       <ConfigProvider 
         locale={locale} 
         theme={theme}
@@ -115,20 +117,10 @@ function App() {
             </Routes>
           </MainLayout>
         </Router>
+        <DebugInfo />
       </ConfigProvider>
-    );
-  } catch (error) {
-    console.error('App Error:', error);
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h1>Có lỗi xảy ra</h1>
-        <p>Vui lòng kiểm tra console để xem chi tiết lỗi.</p>
-        <pre style={{ textAlign: 'left', background: '#f5f5f5', padding: '10px' }}>
-          {error instanceof Error ? error.message : String(error)}
-        </pre>
-      </div>
-    );
-  }
+    </ErrorBoundary>
+  );
 }
 
 export default App;
