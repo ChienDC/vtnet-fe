@@ -16,16 +16,17 @@ import {
   Space,
   Divider
 } from 'antd';
-import { 
-  UserOutlined, 
-  EditOutlined, 
+import {
+  UserOutlined,
+  EditOutlined,
   ArrowLeftOutlined,
   PhoneOutlined,
   MailOutlined,
   CalendarOutlined,
   TeamOutlined,
   TrophyOutlined,
-  RiseOutlined
+  RiseOutlined,
+  AimOutlined
 } from '@ant-design/icons';
 import { Employee } from '../types';
 import { employeeAPI } from '../services/api';
@@ -108,7 +109,7 @@ const EmployeeView: React.FC = () => {
 
       <Row gutter={16}>
         <Col span={8}>
-          <Card>
+          <Card style={{ marginBottom: 16 }}>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
               <Avatar 
                 size={120} 
@@ -145,6 +146,39 @@ const EmployeeView: React.FC = () => {
                 <Text>Ngày vào làm: {employee.joinDate}</Text>
               </div>
             </Space>
+          </Card>
+
+          <Card
+            style={{
+              background: 'linear-gradient(135deg, #E0F1DF 0%, #8EC989 100%)',
+              borderRadius: 16,
+              border: 'none',
+              boxShadow: '0 4px 12px rgba(72, 146, 66, 0.2)',
+            }}
+          >
+            <div style={{ textAlign: 'center' }}>
+              <AimOutlined style={{ fontSize: 32, color: '#489242', marginBottom: 12 }} />
+              <Title level={4} style={{ margin: 0, color: '#489242' }}>Vị trí phấn đấu</Title>
+              <Divider style={{ margin: '12px 0', borderColor: 'rgba(72, 146, 66, 0.2)' }} />
+              <div style={{ marginTop: 12 }}>
+                <Tag
+                  style={{
+                    background: '#fff',
+                    color: '#489242',
+                    border: '2px solid #489242',
+                    padding: '8px 16px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    borderRadius: 8,
+                  }}
+                >
+                  {employee.careerPath.targetLevel}
+                </Tag>
+              </div>
+              <div style={{ marginTop: 16, color: '#374151' }}>
+                <Text style={{ fontSize: '13px' }}>Mục tiêu thăng tiến</Text>
+              </div>
+            </div>
           </Card>
         </Col>
 

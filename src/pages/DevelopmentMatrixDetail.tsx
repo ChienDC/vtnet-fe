@@ -183,7 +183,7 @@ const DevelopmentMatrixDetail: React.FC = () => {
   }
 
   if (!matrix || !employee) {
-    return <div>Không tìm thấy thông tin ma trận phát triển</div>;
+    return <div>Không tìm thấy thông tin lộ trình phát triển</div>;
   }
 
   return (
@@ -199,7 +199,7 @@ const DevelopmentMatrixDetail: React.FC = () => {
           Quay lại
         </Button>
         <Button className="btn-primary" type="primary" icon={<EditOutlined />}>
-          Chỉnh sửa ma trận
+          Chỉnh sửa lộ trình
         </Button>
       </div>
 
@@ -223,7 +223,7 @@ const DevelopmentMatrixDetail: React.FC = () => {
             </div>
           </Col>
           <Col span={18}>
-            <Descriptions title="Thông tin ma trận phát triển" column={2}>
+            <Descriptions title="Thông tin lộ trình phát triển" column={2}>
               <Descriptions.Item label="Phòng ban">
                 <Tag className="modern-tag tag-blue">{matrix.department}</Tag>
               </Descriptions.Item>
@@ -248,7 +248,7 @@ const DevelopmentMatrixDetail: React.FC = () => {
       </Card>
 
       {/* Development Matrix Visualization */}
-      <Card title="Ma trận Phát triển Cá nhân" className="modern-card glass-card" style={{ marginBottom: 24 }}>
+      <Card title="Lộ trình Phát triển Cá nhân" className="modern-card glass-card" style={{ marginBottom: 24 }}>
         <div style={{ overflowX: 'auto' }}>
           <div style={{ minWidth: 800 }}>
             {/* Header with levels */}

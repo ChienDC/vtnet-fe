@@ -83,7 +83,7 @@ const Dashboard: React.FC = () => {
         flexDirection: 'column'
       }}>
         <Spin 
-          indicator={<LoadingOutlined style={{ fontSize: 48, color: '#ef4444' }} spin />} 
+          indicator={<LoadingOutlined style={{ fontSize: 48, color: '#EF0032' }} spin />} 
           size="large" 
         />
         <div style={{ marginTop: 16, fontSize: '16px', color: '#666' }}>
@@ -105,7 +105,7 @@ const Dashboard: React.FC = () => {
               title="Tổng số nhân viên"
               value={stats?.totalEmployees || 0}
               prefix={<UserOutlined />}
-              valueStyle={{ color: '#ef4444', fontWeight: 'bold', fontSize: '28px' }}
+              valueStyle={{ color: '#EF0032', fontWeight: 'bold', fontSize: '28px' }}
               titleStyle={{ color: '#6b7280', fontWeight: '500' }}
             />
             </div>
@@ -118,7 +118,7 @@ const Dashboard: React.FC = () => {
               title="Lộ trình đang thực hiện"
               value={stats?.activeCareerPaths || 0}
               prefix={<RiseOutlined />}
-              valueStyle={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '28px' }}
+              valueStyle={{ color: '#176FEE', fontWeight: 'bold', fontSize: '28px' }}
               titleStyle={{ color: '#6b7280', fontWeight: '500' }}
             />
             </div>
@@ -131,20 +131,20 @@ const Dashboard: React.FC = () => {
               title="Mục tiêu đã hoàn thành"
               value={stats?.completedMilestones || 0}
               prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#10b981', fontWeight: 'bold', fontSize: '28px' }}
+              valueStyle={{ color: '#489242', fontWeight: 'bold', fontSize: '28px' }}
               titleStyle={{ color: '#6b7280', fontWeight: '500' }}
             />
             </div>
           </Card>
         </Col>
         <Col span={6}>
-          <Card className="stat-card bg-illustration-1">
+          <Card className="stat-card bg-illustration-4">
             <div className="stat-card-content">
             <Statistic
               title="Chứng chỉ chờ duyệt"
               value={stats?.pendingCertifications || 0}
               prefix={<FileTextOutlined />}
-              valueStyle={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '28px' }}
+              valueStyle={{ color: '#028599', fontWeight: 'bold', fontSize: '28px' }}
               titleStyle={{ color: '#6b7280', fontWeight: '500' }}
             />
             </div>
@@ -167,8 +167,8 @@ const Dashboard: React.FC = () => {
                   status="active"
                   format={percent => `${percent}% tiến độ TB`}
                   strokeColor={{
-                    '0%': '#ef4444',
-                    '100%': '#dc2626',
+                    '0%': '#EF0032',
+                    '100%': '#d10029',
                   }}
                 />
               </div>

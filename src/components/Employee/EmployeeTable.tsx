@@ -31,6 +31,7 @@ import { employeeAPI } from '../../services/api';
 import EmployeeModal from './EmployeeModal';
 import ExcelImportModal from './ExcelImportModal';
 import ExcelExportModal from './ExcelExportModal';
+import CurrentUserInfo from './CurrentUserInfo';
 
 const { Search } = Input;
 
@@ -255,17 +256,24 @@ const EmployeeTable: React.FC = () => {
 
   return (
     <div className="fade-in">
-      <Card className="modern-card">
-        <Row gutter={16} style={{ marginBottom: 16 }}>
+      <CurrentUserInfo />
+      <Card
+        className="modern-card"
+        bodyStyle={{ padding: '28px 32px' }}
+      >
+        <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col flex="auto">
             <Search
               placeholder="Tìm kiếm theo tên, mã NV, email hoặc phòng ban"
               allowClear
               enterButton={<SearchOutlined />}
-              size="middle"
+              size="large"
               onSearch={setSearchText}
               onChange={e => setSearchText(e.target.value)}
-              style={{ borderRadius: '12px' }}
+              style={{
+                borderRadius: '12px',
+              }}
+              className="modern-search"
             />
           </Col>
           <Col>

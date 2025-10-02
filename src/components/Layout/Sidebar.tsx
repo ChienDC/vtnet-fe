@@ -14,6 +14,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const { Sider } = Layout;
 
+const menuIconStyle = {
+  fontSize: '18px',
+  color: '#EF0032',
+};
+
 const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,12 +53,12 @@ const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
     {
       key: '/development-matrix',
       icon: <FileTextOutlined />,
-      label: 'Ma trận phát triển cá nhân',
+      label: 'Lộ trình phát triển cá nhân',
     },
     {
       key: '/career-matrix',
       icon: <FileTextOutlined />,
-      label: 'Ma trận quản lý',
+      label: 'Lộ trình quản lý',
     },
     {
       key: '/departments',
@@ -70,11 +75,6 @@ const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
       icon: <SettingOutlined />,
       label: 'Cài đặt',
     },
-    {
-      key: '/test',
-      icon: <SettingOutlined />,
-      label: 'Test API',
-    },
   ];
 
   const handleMenuClick = ({ key }: { key: string }) => {
@@ -82,9 +82,9 @@ const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
   };
 
   return (
-    <Sider 
-      trigger={null} 
-      collapsible 
+    <Sider
+      trigger={null}
+      collapsible
       collapsed={collapsed}
       className="modern-sidebar"
       style={{
@@ -94,28 +94,30 @@ const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
         left: 0,
         top: 0,
         bottom: 0,
-        background: 'linear-gradient(180deg, #1f2937 0%, #111827 100%)',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        background: '#ffffff',
+        boxShadow: '2px 0 8px rgba(0, 0, 0, 0.08)',
+        borderRight: '1px solid #e5e5e5',
       }}
     >
-      <div 
-        style={{ 
-          height: 32, 
-          margin: 16, 
-          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+      <div
+        style={{
+          height: 64,
+          margin: '16px 16px 24px 16px',
+          background: 'linear-gradient(135deg, #EF0032 0%, #FF5B82 100%)',
           borderRadius: 12,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: 'white',
           fontWeight: 'bold',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          fontSize: '16px',
+          boxShadow: '0 4px 12px rgba(239, 0, 50, 0.3)',
         }}
       >
-        {collapsed ? 'VTNET' : 'VTNET CAREER'}
+        {collapsed ? 'VT' : 'VTNET CAREER'}
       </div>
       <Menu
-        theme="dark"
+        theme="light"
         mode="inline"
         selectedKeys={[location.pathname]}
         items={menuItems}
@@ -123,6 +125,7 @@ const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
         style={{
           background: 'transparent',
           border: 'none',
+          fontWeight: 500,
         }}
       />
     </Sider>

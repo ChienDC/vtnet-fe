@@ -1,433 +1,736 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Card, Select, Button, Input, ColorPicker, Space, message, Modal } from "antd";
-import { 
-  SaveOutlined, 
-  UndoOutlined, 
-  RedoOutlined, 
-  EditOutlined,
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Card,
+  Button,
+  Input,
+  Select,
+  Space,
+  Modal,
+  ColorPicker,
+  message,
+  Popconfirm,
+  Row,
+  Col,
+  Divider,
+  Tag,
+} from 'antd';
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  SaveOutlined,
+  BgColorsOutlined,
   ArrowRightOutlined,
-  DeleteOutlined
+  ClearOutlined,
 } from '@ant-design/icons';
+import { createClient } from '@supabase/supabase-js';
 
 const { Option } = Select;
 
-interface CellData {
-  text: string;
-  color: string;
-  backgroundColor: string;
-}
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
-interface ArrowData {
+interface Cell {
   id: string;
-  from: { row: number; col: number };
-  to: { row: number; col: number };
-  color: string;
+  row: number;
+  col: number;
+  positionName: string;
+  levelName: string;
+  content: string;
+  backgroundColor: string;
+  textColor: string;
 }
 
-// Simple Arrow Component - Just draw line between two points
-const SVGArrow: React.FC<{
-  from: { row: number; col: number };
-  to: { row: number; col: number };
-  color: string;
-  cellSize: { width: number; height: number };
-  offset: { x: number; y: number };
-}> = ({ from, to, color, cellSize, offset }) => {
-  // Calculate positions based on cell size
-  const startX = (from.col + 1) * cellSize.width + cellSize.width / 2;
-  const startY = (from.row + 1) * cellSize.height + cellSize.height / 2;
-  const endX = (to.col + 1) * cellSize.width + cellSize.width / 2;
-  const endY = (to.row + 1) * cellSize.height + cellSize.height / 2;
-  
-  return (
-    <svg
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none',
-        zIndex: 10
-      }}
-    >
-      {/* Simple arrow line */}
-      <line
-        x1={startX}
-        y1={startY}
-        x2={endX}
-        y2={endY}
-        stroke={color}
-        strokeWidth="3"
-        strokeLinecap="round"
-        markerEnd="url(#arrowhead)"
-      />
-      
-      {/* Arrow head marker */}
-      <defs>
-        <marker
-          id="arrowhead"
-          markerWidth="10"
-          markerHeight="7"
-          refX="9"
-          refY="3.5"
-          orient="auto"
-        >
-          <polygon
-            points="0 0, 10 3.5, 0 7"
-            fill={color}
-          />
-        </marker>
-      </defs>
-    </svg>
-  );
-};
-
-interface MatrixData {
-  cells: { [key: string]: CellData };
-  arrows: ArrowData[];
+interface Arrow {
+  id: string;
+  fromCellId: string;
+  toCellId: string;
+  arrowColor: string;
+  label: string;
 }
 
-export default function CareerPathMatrix() {
-  const positions = [
-    "Quản lý bảo dưỡng",
-    "Phó phòng Quản lý thay đổi", 
-    "Trưởng phòng Quản lý thay đổi",
-    "Kỹ sư Quản lý thay đổi hệ thống mạng lõi",
-    "Kỹ sư Quản lý thay đổi hệ thống mạng truy nhập",
-    "Kỹ sư Quản lý thay đổi thị trường",
-  ];
+interface MatrixTemplate {
+  id: string;
+  name: string;
+  department: string;
+  profession: string;
+}
 
-  const levels = ["Bậc 11", "Bậc 12", "Bậc 13", "Bậc 14", "Bậc 15", "Bậc 16", "Bậc 17"];
+const ManagementMatrix: React.FC = () => {
+  const [matrices, setMatrices] = useState<MatrixTemplate[]>([]);
+  const [currentMatrixId, setCurrentMatrixId] = useState<string | null>(null);
+  const [cells, setCells] = useState<Cell[]>([]);
+  const [arrows, setArrows] = useState<Arrow[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // State management
-  const [matrixData, setMatrixData] = useState<MatrixData>({
-    cells: {},
-    arrows: []
-  });
-  
+  const [positions, setPositions] = useState<string[]>([
+    'Quản lý bảo dưỡng',
+    'Phó phòng Quản lý thay đổi',
+    'Trưởng phòng Quản lý thay đổi',
+    'Kỹ sư Quản lý thay đổi hệ thống mạng lõi',
+  ]);
+
+  const [levels, setLevels] = useState<string[]>([
+    'Bậc 11',
+    'Bậc 12',
+    'Bậc 13',
+    'Bậc 14',
+    'Bậc 15',
+  ]);
+
   const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null);
-  const [editingText, setEditingText] = useState("");
-  const [selectedColor, setSelectedColor] = useState("#3b82f6");
-  const [selectedBgColor, setSelectedBgColor] = useState("#ffffff");
-  const [isDrawingArrow, setIsDrawingArrow] = useState(false);
+  const [colorPickerVisible, setColorPickerVisible] = useState(false);
+  const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
+
+  const [arrowMode, setArrowMode] = useState(false);
   const [arrowStart, setArrowStart] = useState<{ row: number; col: number } | null>(null);
-  const [history, setHistory] = useState<MatrixData[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [modalCell, setModalCell] = useState<{ row: number; col: number } | null>(null);
 
-  const tableRef = useRef<HTMLTableElement>(null);
-  const [cellSize, setCellSize] = useState({ width: 120, height: 60 });
-  const [tableOffset, setTableOffset] = useState({ x: 0, y: 0 });
+  const [newMatrixModalVisible, setNewMatrixModalVisible] = useState(false);
+  const [newMatrixName, setNewMatrixName] = useState('');
+  const [newMatrixDepartment, setNewMatrixDepartment] = useState('');
+  const [newMatrixProfession, setNewMatrixProfession] = useState('');
 
-  // Load saved data on component mount
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [cellPositions, setCellPositions] = useState<Map<string, DOMRect>>(new Map());
+
   useEffect(() => {
-    const savedData = localStorage.getItem('managementMatrixData');
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        setMatrixData(parsed);
-        addToHistory(parsed);
-      } catch (error) {
-        console.error('Error loading saved data:', error);
-      }
-    } else {
-      // Initialize with default data
-      const defaultData: MatrixData = {
-        cells: {
-          "0-0": { text: "PvM0/1", color: "#000000", backgroundColor: "#e5f3ff" },
-          "0-1": { text: "PvM2", color: "#000000", backgroundColor: "#e5f3ff" },
-          "1-3": { text: "PP", color: "#000000", backgroundColor: "#e5f3ff" },
-          "2-4": { text: "TP", color: "#000000", backgroundColor: "#e5f3ff" },
-          "3-0": { text: "CM0/1", color: "#000000", backgroundColor: "#e5f3ff" },
-          "3-1": { text: "CM2", color: "#000000", backgroundColor: "#e5f3ff" },
-          "3-3": { text: "CM3", color: "#000000", backgroundColor: "#e5f3ff" },
-          "4-0": { text: "CM0/1", color: "#000000", backgroundColor: "#e5f3ff" },
-          "4-1": { text: "CM2", color: "#000000", backgroundColor: "#e5f3ff" },
-          "4-3": { text: "CM3", color: "#000000", backgroundColor: "#e5f3ff" },
-          "5-0": { text: "CM0/1", color: "#000000", backgroundColor: "#e5f3ff" },
-          "5-1": { text: "CM2", color: "#000000", backgroundColor: "#e5f3ff" },
-          "5-3": { text: "CM3", color: "#000000", backgroundColor: "#e5f3ff" },
-        },
-        arrows: []
-      };
-      setMatrixData(defaultData);
-      addToHistory(defaultData);
-    }
+    loadMatrices();
   }, []);
 
-  // Calculate table dimensions
   useEffect(() => {
-    const updateDimensions = () => {
-      if (tableRef.current) {
-        // Get actual table dimensions
-        const tableRect = tableRef.current.getBoundingClientRect();
-        const totalWidth = tableRect.width;
-        const totalHeight = tableRect.height;
-        
-        // Calculate cell dimensions
-        const cellWidth = totalWidth / (levels.length + 1); // +1 for position column
-        const cellHeight = totalHeight / (positions.length + 1); // +1 for header row
-        
-        setCellSize({ width: cellWidth, height: cellHeight });
-        
-        // Calculate offset from container
-        const containerRect = tableRef.current.closest('.p-4')?.getBoundingClientRect();
-        if (containerRect) {
-          setTableOffset({
-            x: tableRect.left - containerRect.left,
-            y: tableRect.top - containerRect.top
-          });
-        }
+    if (currentMatrixId) {
+      loadMatrixData(currentMatrixId);
+    }
+  }, [currentMatrixId]);
+
+  useEffect(() => {
+    updateCellPositions();
+    window.addEventListener('resize', updateCellPositions);
+    return () => window.removeEventListener('resize', updateCellPositions);
+  }, [cells, arrows]);
+
+  const updateCellPositions = () => {
+    if (!tableRef.current) return;
+
+    const newPositions = new Map<string, DOMRect>();
+    const table = tableRef.current;
+    const allCells = table.querySelectorAll('[data-cell-id]');
+
+    allCells.forEach((cellElement) => {
+      const cellId = cellElement.getAttribute('data-cell-id');
+      if (cellId) {
+        const rect = cellElement.getBoundingClientRect();
+        const tableRect = table.getBoundingClientRect();
+        const relativeRect = new DOMRect(
+          rect.left - tableRect.left,
+          rect.top - tableRect.top,
+          rect.width,
+          rect.height
+        );
+        newPositions.set(cellId, relativeRect);
       }
-    };
+    });
 
-    // Delay to ensure table is rendered
-    const timer = setTimeout(updateDimensions, 100);
-    window.addEventListener('resize', updateDimensions);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', updateDimensions);
-    };
-  }, [levels.length, positions.length]);
-
-  // History management
-  const addToHistory = (data: MatrixData) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(JSON.parse(JSON.stringify(data)));
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
+    setCellPositions(newPositions);
   };
 
-  const undo = () => {
-    if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1);
-      setMatrixData(history[historyIndex - 1]);
+  const loadMatrices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('career_matrix_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setMatrices(data || []);
+      if (data && data.length > 0 && !currentMatrixId) {
+        setCurrentMatrixId(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading matrices:', error);
+      message.error('Không thể tải danh sách lộ trình');
     }
   };
 
-  const redo = () => {
-    if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex + 1);
-      setMatrixData(history[historyIndex + 1]);
+  const loadMatrixData = async (matrixId: string) => {
+    setIsLoading(true);
+    try {
+      const { data: cellsData, error: cellsError } = await supabase
+        .from('career_matrix_cells')
+        .select('*')
+        .eq('matrix_id', matrixId);
+
+      if (cellsError) throw cellsError;
+
+      const loadedCells: Cell[] = (cellsData || []).map((cell: any) => ({
+        id: cell.id,
+        row: cell.row_index,
+        col: cell.col_index,
+        positionName: cell.position_name || '',
+        levelName: cell.level_name || '',
+        content: cell.content || '',
+        backgroundColor: cell.background_color || '#ffffff',
+        textColor: cell.text_color || '#000000',
+      }));
+
+      setCells(loadedCells);
+
+      const { data: arrowsData, error: arrowsError } = await supabase
+        .from('career_matrix_arrows')
+        .select('*')
+        .eq('matrix_id', matrixId);
+
+      if (arrowsError) throw arrowsError;
+
+      const loadedArrows: Arrow[] = (arrowsData || []).map((arrow: any) => ({
+        id: arrow.id,
+        fromCellId: arrow.from_cell_id,
+        toCellId: arrow.to_cell_id,
+        arrowColor: arrow.arrow_color || '#1769FE',
+        label: arrow.label || '',
+      }));
+
+      setArrows(loadedArrows);
+    } catch (error) {
+      console.error('Error loading matrix data:', error);
+      message.error('Không thể tải dữ liệu lộ trình');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Cell operations
-  const getCellKey = (row: number, col: number) => `${row}-${col}`;
+  const createNewMatrix = async () => {
+    if (!newMatrixName.trim()) {
+      message.warning('Vui lòng nhập tên lộ trình');
+      return;
+    }
 
-  const getCellData = (row: number, col: number): CellData => {
-    const key = getCellKey(row, col);
-    return matrixData.cells[key] || { text: "", color: "#000000", backgroundColor: "#ffffff" };
+    try {
+      const { data, error } = await supabase
+        .from('career_matrix_templates')
+        .insert([
+          {
+            name: newMatrixName,
+            department: newMatrixDepartment,
+            profession: newMatrixProfession,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      message.success('Tạo lộ trình mới thành công');
+      setNewMatrixModalVisible(false);
+      setNewMatrixName('');
+      setNewMatrixDepartment('');
+      setNewMatrixProfession('');
+      loadMatrices();
+      setCurrentMatrixId(data.id);
+    } catch (error) {
+      console.error('Error creating matrix:', error);
+      message.error('Không thể tạo lộ trình mới');
+    }
   };
 
-  const updateCell = (row: number, col: number, data: Partial<CellData>) => {
-    const key = getCellKey(row, col);
-    const newData = { ...matrixData };
-    newData.cells[key] = { ...getCellData(row, col), ...data };
-    setMatrixData(newData);
-    addToHistory(newData);
+  const getCellData = (row: number, col: number): Cell | undefined => {
+    return cells.find((cell) => cell.row === row && cell.col === col);
   };
 
-  const handleCellClick = (row: number, col: number) => {
-    if (isDrawingArrow) {
-      if (!arrowStart) {
-        setArrowStart({ row, col });
-        message.info('Đã chọn điểm bắt đầu. Click vào ô khác để vẽ mũi tên.');
+  const updateCellContent = (row: number, col: number, content: string) => {
+    setCells((prev) => {
+      const existing = prev.find((cell) => cell.row === row && cell.col === col);
+      if (existing) {
+        return prev.map((cell) =>
+          cell.row === row && cell.col === col ? { ...cell, content } : cell
+        );
       } else {
-        // Create arrow
-        const newArrow: ArrowData = {
-          id: `arrow-${Date.now()}`,
-          from: arrowStart,
-          to: { row, col },
-          color: selectedColor
-        };
-        
-        const newData = { ...matrixData };
-        newData.arrows.push(newArrow);
-        setMatrixData(newData);
-        addToHistory(newData);
-        
-        setIsDrawingArrow(false);
-        setArrowStart(null);
-        message.success('Đã tạo mũi tên thành công!');
-      }
-    } else {
-      const cellData = getCellData(row, col);
-      setEditingText(cellData.text);
-      setSelectedColor(cellData.color);
-      setSelectedBgColor(cellData.backgroundColor);
-      setModalCell({ row, col });
-      setIsModalVisible(true);
-    }
-  };
-
-  const saveCellData = () => {
-    if (modalCell) {
-      updateCell(modalCell.row, modalCell.col, {
-        text: editingText,
-        color: selectedColor,
-        backgroundColor: selectedBgColor
-      });
-      setIsModalVisible(false);
-      setModalCell(null);
-      message.success('Đã lưu dữ liệu ô!');
-    }
-  };
-
-  const deleteArrow = (arrowId: string) => {
-    const newData = { ...matrixData };
-    newData.arrows = newData.arrows.filter(arrow => arrow.id !== arrowId);
-    setMatrixData(newData);
-    addToHistory(newData);
-    message.success('Đã xóa mũi tên!');
-  };
-
-  const saveToStorage = () => {
-    localStorage.setItem('managementMatrixData', JSON.stringify(matrixData));
-    message.success('Đã lưu ma trận thành công!');
-  };
-
-  const clearAll = () => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      content: 'Bạn có chắc chắn muốn xóa toàn bộ dữ liệu ma trận?',
-      onOk: () => {
-        const emptyData: MatrixData = { cells: {}, arrows: [] };
-        setMatrixData(emptyData);
-        addToHistory(emptyData);
-        message.success('Đã xóa toàn bộ dữ liệu!');
+        return [
+          ...prev,
+          {
+            id: `temp-${Date.now()}`,
+            row,
+            col,
+            positionName: positions[row] || '',
+            levelName: levels[col] || '',
+            content,
+            backgroundColor: '#ffffff',
+            textColor: '#000000',
+          },
+        ];
       }
     });
   };
 
-  return (
-    <div className="p-6">
-      {/* Toolbar */}
-      <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-        <Space>
-          <Button 
-            icon={<EditOutlined />} 
-            onClick={() => setIsDrawingArrow(false)}
-            type={!isDrawingArrow ? "primary" : "default"}
+  const updateCellColor = (row: number, col: number, backgroundColor: string) => {
+    setCells((prev) => {
+      const existing = prev.find((cell) => cell.row === row && cell.col === col);
+      if (existing) {
+        return prev.map((cell) =>
+          cell.row === row && cell.col === col ? { ...cell, backgroundColor } : cell
+        );
+      } else {
+        return [
+          ...prev,
+          {
+            id: `temp-${Date.now()}`,
+            row,
+            col,
+            positionName: positions[row] || '',
+            levelName: levels[col] || '',
+            content: '',
+            backgroundColor,
+            textColor: '#000000',
+          },
+        ];
+      }
+    });
+    setColorPickerVisible(false);
+  };
+
+  const handleCellClick = (row: number, col: number) => {
+    if (arrowMode) {
+      if (!arrowStart) {
+        setArrowStart({ row, col });
+        message.info('Đã chọn ô bắt đầu, click vào ô đích để tạo mũi tên');
+      } else {
+        const fromCell = getCellData(arrowStart.row, arrowStart.col);
+        const toCell = getCellData(row, col);
+
+        if (fromCell && toCell) {
+          setArrows((prev) => [
+            ...prev,
+            {
+              id: `temp-arrow-${Date.now()}`,
+              fromCellId: fromCell.id,
+              toCellId: toCell.id,
+              arrowColor: '#1769FE',
+              label: '',
+            },
+          ]);
+          message.success('Đã tạo mũi tên');
+        }
+
+        setArrowStart(null);
+        setArrowMode(false);
+      }
+    }
+  };
+
+  const saveMatrix = async () => {
+    if (!currentMatrixId) {
+      message.warning('Vui lòng chọn hoặc tạo lộ trình mới');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await supabase.from('career_matrix_cells').delete().eq('matrix_id', currentMatrixId);
+
+      const cellsToInsert = cells.map((cell) => ({
+        matrix_id: currentMatrixId,
+        row_index: cell.row,
+        col_index: cell.col,
+        position_name: cell.positionName,
+        level_name: cell.levelName,
+        content: cell.content,
+        background_color: cell.backgroundColor,
+        text_color: cell.textColor,
+      }));
+
+      const { data: insertedCells, error: cellsError } = await supabase
+        .from('career_matrix_cells')
+        .insert(cellsToInsert)
+        .select();
+
+      if (cellsError) throw cellsError;
+
+      const cellIdMap = new Map();
+      insertedCells.forEach((insertedCell: any, index: number) => {
+        const originalCell = cells[index];
+        cellIdMap.set(originalCell.id, insertedCell.id);
+      });
+
+      await supabase.from('career_matrix_arrows').delete().eq('matrix_id', currentMatrixId);
+
+      const arrowsToInsert = arrows
+        .filter((arrow) => cellIdMap.has(arrow.fromCellId) && cellIdMap.has(arrow.toCellId))
+        .map((arrow) => ({
+          matrix_id: currentMatrixId,
+          from_cell_id: cellIdMap.get(arrow.fromCellId),
+          to_cell_id: cellIdMap.get(arrow.toCellId),
+          arrow_color: arrow.arrowColor,
+          label: arrow.label,
+        }));
+
+      if (arrowsToInsert.length > 0) {
+        const { error: arrowsError } = await supabase
+          .from('career_matrix_arrows')
+          .insert(arrowsToInsert);
+
+        if (arrowsError) throw arrowsError;
+      }
+
+      message.success('Đã lưu lộ trình thành công');
+      loadMatrixData(currentMatrixId);
+    } catch (error) {
+      console.error('Error saving matrix:', error);
+      message.error('Không thể lưu lộ trình');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearMatrix = () => {
+    setCells([]);
+    setArrows([]);
+    message.success('Đã xóa tất cả dữ liệu lộ trình');
+  };
+
+  const deleteArrow = (arrowId: string) => {
+    setArrows((prev) => prev.filter((arrow) => arrow.id !== arrowId));
+  };
+
+  const renderArrows = () => {
+    if (arrows.length === 0 || cellPositions.size === 0) return null;
+
+    return (
+      <svg
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'none',
+          zIndex: 1,
+        }}
+      >
+        <defs>
+          <marker
+            id="arrowhead"
+            markerWidth="10"
+            markerHeight="10"
+            refX="9"
+            refY="3"
+            orient="auto"
+            markerUnits="strokeWidth"
           >
-            Chỉnh sửa ô
-          </Button>
-          <Button 
-            icon={<ArrowRightOutlined />} 
-            onClick={() => {
-              setIsDrawingArrow(true);
-              setArrowStart(null);
-              message.info('Chế độ vẽ mũi tên. Click vào ô để chọn điểm bắt đầu.');
-            }}
-            type={isDrawingArrow ? "primary" : "default"}
-          >
-            Vẽ mũi tên
-          </Button>
-        </Space>
+            <polygon points="0 0, 10 3, 0 6" fill="#1769FE" />
+          </marker>
+        </defs>
+        {arrows.map((arrow) => {
+          const fromCell = cells.find((c) => c.id === arrow.fromCellId);
+          const toCell = cells.find((c) => c.id === arrow.toCellId);
 
-        <Space>
-          <Button icon={<UndoOutlined />} onClick={undo} disabled={historyIndex <= 0}>
-            Hoàn tác
-          </Button>
-          <Button icon={<RedoOutlined />} onClick={redo} disabled={historyIndex >= history.length - 1}>
-            Làm lại
-          </Button>
-        </Space>
+          if (!fromCell || !toCell) return null;
 
-        <Space>
-          <Button icon={<SaveOutlined />} onClick={saveToStorage} type="primary">
-            Lưu ma trận
-          </Button>
-          <Button icon={<DeleteOutlined />} onClick={clearAll} danger>
-            Xóa tất cả
-          </Button>
-        </Space>
+          const fromCellKey = `${fromCell.row}-${fromCell.col}`;
+          const toCellKey = `${toCell.row}-${toCell.col}`;
 
-        {/* Color pickers */}
-        <Space>
-          <span>Màu chữ:</span>
-          <ColorPicker 
-            value={selectedColor} 
-            onChange={(color) => setSelectedColor(color.toHexString())}
-            size="small"
-          />
-          <span>Màu nền:</span>
-          <ColorPicker 
-            value={selectedBgColor} 
-            onChange={(color) => setSelectedBgColor(color.toHexString())}
-            size="small"
-          />
-        </Space>
-      </div>
+          const fromRect = cellPositions.get(fromCellKey);
+          const toRect = cellPositions.get(toCellKey);
 
-      {/* Filters */}
-      <div className="flex gap-4 mb-6">
-        <Select placeholder="Ngành" style={{ width: 200 }}>
-          <Option value="impact">Quản lý tác động</Option>
-          <Option value="other">Ngành khác</Option>
-        </Select>
+          if (!fromRect || !toRect) return null;
 
-        <Select placeholder="Nghề" style={{ width: 200 }}>
-          <Option value="operation">Vận hành khai thác</Option>
-          <Option value="other">Khác</Option>
-        </Select>
-      </div>
+          const startX = fromRect.left + fromRect.width / 2;
+          const startY = fromRect.top + fromRect.height / 2;
+          const endX = toRect.left + toRect.width / 2;
+          const endY = toRect.top + toRect.height / 2;
 
-      {/* Matrix */}
-      <Card className="overflow-auto">
-        <div className="p-4 relative">
-          {/* SVG Arrows Layer */}
-          <div className="absolute inset-0 pointer-events-none z-10">
-            {matrixData.arrows.map((arrow) => (
-              <SVGArrow
-                key={arrow.id}
-                from={arrow.from}
-                to={arrow.to}
-                color={arrow.color}
-                cellSize={cellSize}
-                offset={tableOffset}
+          const dx = endX - startX;
+          const dy = endY - startY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          const arrowLength = 10;
+          const adjustedEndX = endX - (dx / distance) * arrowLength;
+          const adjustedEndY = endY - (dy / distance) * arrowLength;
+
+          // Tính toán control points dựa trên hướng của mũi tên
+          let controlX1, controlY1, controlX2, controlY2;
+          
+          // Kiểm tra xem mũi tên là ngang hay dọc
+          const isHorizontal = Math.abs(dx) > Math.abs(dy);
+          
+          if (isHorizontal) {
+            // Mũi tên ngang - giữ nguyên logic cũ
+            controlX1 = startX + dx * 0.25;
+            controlY1 = startY;
+            controlX2 = startX + dx * 0.75;
+            controlY2 = endY;
+          } else {
+            // Mũi tên dọc - điều chỉnh control points
+            controlX1 = startX;
+            controlY1 = startY + dy * 0.25;
+            controlX2 = endX;
+            controlY2 = startY + dy * 0.75;
+          }
+
+          const path = `M ${startX} ${startY} C ${controlX1} ${controlY1}, ${controlX2} ${controlY2}, ${adjustedEndX} ${adjustedEndY}`;
+
+          return (
+            <g key={arrow.id}>
+              <path
+                d={path}
+                stroke={arrow.arrowColor}
+                strokeWidth="2"
+                fill="none"
+                markerEnd="url(#arrowhead)"
+                style={{
+                  filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))',
+                }}
               />
-            ))}
-          </div>
-          
-          {/* Debug info */}
-          <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs p-2 rounded">
-            Cell: {cellSize.width.toFixed(0)}x{cellSize.height.toFixed(0)} | 
-            Offset: {tableOffset.x.toFixed(0)},{tableOffset.y.toFixed(0)}
-          </div>
-          
-          <table ref={tableRef} className="w-full border-collapse">
+            </g>
+          );
+        })}
+      </svg>
+    );
+  };
+
+  return (
+    <div className="fade-in">
+      <Card
+        className="modern-card"
+        bodyStyle={{ padding: '28px 32px' }}
+        style={{ marginBottom: 24 }}
+      >
+        <Row gutter={16} align="middle">
+          <Col flex="auto">
+            <Space size="middle">
+              <Select
+                style={{ width: 300 }}
+                placeholder="Chọn lộ trình"
+                value={currentMatrixId}
+                onChange={setCurrentMatrixId}
+              >
+                {matrices.map((matrix) => (
+                  <Option key={matrix.id} value={matrix.id}>
+                    {matrix.name}
+                  </Option>
+                ))}
+              </Select>
+
+              <Button
+                icon={<PlusOutlined />}
+                onClick={() => setNewMatrixModalVisible(true)}
+              >
+                Tạo lộ trình mới
+              </Button>
+            </Space>
+          </Col>
+          <Col>
+            <Space>
+              <Button
+                type={arrowMode ? 'primary' : 'default'}
+                icon={<ArrowRightOutlined />}
+                onClick={() => {
+                  setArrowMode(!arrowMode);
+                  setArrowStart(null);
+                }}
+              >
+                {arrowMode ? 'Đang nối mũi tên...' : 'Nối mũi tên'}
+              </Button>
+
+              <Popconfirm
+                title="Xóa tất cả dữ liệu?"
+                description="Bạn có chắc chắn muốn xóa tất cả dữ liệu lộ trình hiện tại?"
+                onConfirm={clearMatrix}
+                okText="Xóa"
+                cancelText="Hủy"
+              >
+                <Button icon={<ClearOutlined />} danger>
+                  Xóa tất cả
+                </Button>
+              </Popconfirm>
+
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                onClick={saveMatrix}
+                loading={isLoading}
+              >
+                Lưu lộ trình
+              </Button>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
+      {arrows.length > 0 && (
+        <Card
+          className="modern-card"
+          title="Danh sách mũi tên"
+          bodyStyle={{ padding: '20px 24px' }}
+          style={{ marginBottom: 24 }}
+        >
+          <Space wrap>
+            {arrows.map((arrow) => {
+              const fromCell = cells.find((c) => c.id === arrow.fromCellId);
+              const toCell = cells.find((c) => c.id === arrow.toCellId);
+              return (
+                <Tag
+                  key={arrow.id}
+                  closable
+                  onClose={() => deleteArrow(arrow.id)}
+                  color="blue"
+                >
+                  {fromCell?.content || 'Ô bắt đầu'} → {toCell?.content || 'Ô đích'}
+                </Tag>
+              );
+            })}
+          </Space>
+        </Card>
+      )}
+
+      <Card className="modern-card" bodyStyle={{ padding: 0 }}>
+        <div
+          ref={tableRef}
+          style={{
+            overflowX: 'auto',
+            position: 'relative'
+          }}
+        >
+          {renderArrows()}
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              minWidth: 800,
+            }}
+          >
             <thead>
               <tr>
-                <th className="bg-blue-500 text-white p-2 text-left">Vị trí</th>
-                {levels.map((lvl) => (
-                  <th key={lvl} className="bg-blue-500 text-white p-2">{lvl}</th>
+                <th
+                  style={{
+                    background: '#1769FE',
+                    color: 'white',
+                    padding: '16px',
+                    textAlign: 'left',
+                    fontWeight: 600,
+                    position: 'sticky',
+                    left: 0,
+                    zIndex: 10,
+                  }}
+                >
+                  Vị trí
+                </th>
+                {levels.map((level, index) => (
+                  <th
+                    key={index}
+                    style={{
+                      background: '#1769FE',
+                      color: 'white',
+                      padding: '16px',
+                      textAlign: 'center',
+                      fontWeight: 600,
+                      minWidth: 120,
+                    }}
+                  >
+                    {level}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {positions.map((pos, rowIndex) => (
-                <tr key={pos} className="border-b">
-                  <td className="bg-blue-100 p-2 font-medium">{pos}</td>
-                  {levels.map((lvl, colIndex) => {
+              {positions.map((position, rowIndex) => (
+                <tr key={rowIndex}>
+                  <td
+                    style={{
+                      background: '#e0f2fe',
+                      padding: '16px',
+                      fontWeight: 600,
+                      borderBottom: '1px solid #e8edf2',
+                      position: 'sticky',
+                      left: 0,
+                      zIndex: 5,
+                    }}
+                  >
+                    {position}
+                  </td>
+                  {levels.map((level, colIndex) => {
                     const cellData = getCellData(rowIndex, colIndex);
-                    const isArrowStart = arrowStart?.row === rowIndex && arrowStart?.col === colIndex;
-                    
+                    const isEditing =
+                      editingCell?.row === rowIndex && editingCell?.col === colIndex;
+                    const isArrowStart =
+                      arrowStart?.row === rowIndex && arrowStart?.col === colIndex;
+
+                    const hasArrowFrom = arrows.some(
+                      (arrow) => arrow.fromCellId === cellData?.id
+                    );
+                    const hasArrowTo = arrows.some(
+                      (arrow) => arrow.toCellId === cellData?.id
+                    );
+
                     return (
                       <td
                         key={colIndex}
-                        className={`text-center p-2 border cursor-pointer relative min-w-[80px] min-h-[40px] ${
-                          isArrowStart ? 'ring-2 ring-blue-500' : ''
-                        }`}
+                        data-cell-id={`${rowIndex}-${colIndex}`}
                         style={{
-                          backgroundColor: cellData.backgroundColor,
-                          color: cellData.color,
-                          position: 'relative'
+                          background: cellData?.backgroundColor || '#f8fafc',
+                          color: cellData?.textColor || '#000000',
+                          padding: '12px',
+                          textAlign: 'center',
+                          borderBottom: '1px solid #e8edf2',
+                          borderRight: '1px solid #e8edf2',
+                          cursor: arrowMode ? 'pointer' : 'text',
+                          position: 'relative',
+                          minWidth: 120,
+                          border: isArrowStart
+                            ? '3px solid #1769FE'
+                            : hasArrowFrom || hasArrowTo
+                            ? '2px solid #10b981'
+                            : '1px solid #e8edf2',
                         }}
                         onClick={() => handleCellClick(rowIndex, colIndex)}
+                        onDoubleClick={() => {
+                          if (!arrowMode) {
+                            setEditingCell({ row: rowIndex, col: colIndex });
+                          }
+                        }}
                       >
-                        {cellData.text}
+                        {isEditing ? (
+                          <Input
+                            autoFocus
+                            value={cellData?.content || ''}
+                            onChange={(e) =>
+                              updateCellContent(rowIndex, colIndex, e.target.value)
+                            }
+                            onBlur={() => setEditingCell(null)}
+                            onPressEnter={() => setEditingCell(null)}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              textAlign: 'center',
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              minHeight: '24px',
+                              fontWeight: cellData?.content ? 500 : 400,
+                            }}
+                          >
+                            {cellData?.content || ''}
+                          </div>
+                        )}
+                        <Button
+                          type="text"
+                          size="small"
+                          icon={<BgColorsOutlined />}
+                          style={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            opacity: 0.6,
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCell({ row: rowIndex, col: colIndex });
+                            setColorPickerVisible(true);
+                          }}
+                        />
                       </td>
                     );
                   })}
@@ -438,77 +741,71 @@ export default function CareerPathMatrix() {
         </div>
       </Card>
 
-      {/* Arrows list */}
-      {matrixData.arrows.length > 0 && (
-        <Card title="Danh sách mũi tên" className="mt-4">
-          <div className="space-y-2">
-            {matrixData.arrows.map((arrow) => (
-              <div key={arrow.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span>
-                  Từ: {positions[arrow.from.row]} - {levels[arrow.from.col]} 
-                  → 
-                  Đến: {positions[arrow.to.row]} - {levels[arrow.to.col]}
-                </span>
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-4 h-4 rounded" 
-                    style={{ backgroundColor: arrow.color }}
-                  />
-                  <Button 
-                    size="small" 
-                    icon={<DeleteOutlined />} 
-                    onClick={() => deleteArrow(arrow.id)}
-                    danger
-                  >
-                    Xóa
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* Edit Modal */}
       <Modal
-        title="Chỉnh sửa ô"
-        open={isModalVisible}
-        onOk={saveCellData}
-        onCancel={() => setIsModalVisible(false)}
-        okText="Lưu"
+        title="Chọn màu nền"
+        open={colorPickerVisible}
+        onCancel={() => setColorPickerVisible(false)}
+        footer={null}
+      >
+        {selectedCell && (
+          <div style={{ textAlign: 'center', padding: 20 }}>
+            <ColorPicker
+              defaultValue={
+                getCellData(selectedCell.row, selectedCell.col)?.backgroundColor || '#ffffff'
+              }
+              onChange={(color) => {
+                const hexColor = color.toHexString();
+                updateCellColor(selectedCell.row, selectedCell.col, hexColor);
+              }}
+              showText
+              size="large"
+            />
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        title="Tạo lộ trình mới"
+        open={newMatrixModalVisible}
+        onOk={createNewMatrix}
+        onCancel={() => {
+          setNewMatrixModalVisible(false);
+          setNewMatrixName('');
+          setNewMatrixDepartment('');
+          setNewMatrixProfession('');
+        }}
+        okText="Tạo"
         cancelText="Hủy"
       >
-        <div className="space-y-4">
+        <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <div>
-            <label className="block mb-2">Nội dung:</label>
+            <label>Tên lộ trình *</label>
             <Input
-              value={editingText}
-              onChange={(e) => setEditingText(e.target.value)}
-              placeholder="Nhập nội dung..."
+              placeholder="Nhập tên lộ trình"
+              value={newMatrixName}
+              onChange={(e) => setNewMatrixName(e.target.value)}
             />
           </div>
-          
           <div>
-            <label className="block mb-2">Màu chữ:</label>
-            <ColorPicker 
-              value={selectedColor} 
-              onChange={(color) => setSelectedColor(color.toHexString())}
+            <label>Phòng ban</label>
+            <Input
+              placeholder="Nhập tên phòng ban"
+              value={newMatrixDepartment}
+              onChange={(e) => setNewMatrixDepartment(e.target.value)}
             />
           </div>
-          
           <div>
-            <label className="block mb-2">Màu nền:</label>
-            <ColorPicker 
-              value={selectedBgColor} 
-              onChange={(color) => setSelectedBgColor(color.toHexString())}
+            <label>Nghề nghiệp</label>
+            <Input
+              placeholder="Nhập nghề nghiệp"
+              value={newMatrixProfession}
+              onChange={(e) => setNewMatrixProfession(e.target.value)}
             />
           </div>
-          
-          <div className="p-2 border rounded" style={{ backgroundColor: selectedBgColor, color: selectedColor }}>
-            Xem trước: {editingText || "Nội dung mẫu"}
-          </div>
-        </div>
+        </Space>
       </Modal>
     </div>
   );
-}
+};
+
+export default ManagementMatrix;

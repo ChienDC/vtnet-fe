@@ -319,7 +319,7 @@ const CareerRoadmapDetail: React.FC = () => {
       </Card>
 
       {/* Career Matrix */}
-      <Card title="Ma trận Lộ trình Nghề nghiệp" className="modern-card glass-card">
+      <Card title="Lộ trình Nghề nghiệp" className="modern-card glass-card">
         <div style={{ overflowX: 'auto' }}>
           <Table
             className="modern-table"

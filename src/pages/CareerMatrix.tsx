@@ -7,7 +7,7 @@ const { Title } = Typography;
 const CareerMatrix: React.FC = () => {
   return (
     <div>
-      <Title level={2}>Ma trận sự nghiệp</Title>
+      <Title level={2}>Lộ trình sự nghiệp</Title>
       <ManagementMatrix />
     </div>
   );
