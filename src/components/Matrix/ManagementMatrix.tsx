@@ -22,14 +22,9 @@ import {
   ArrowRightOutlined,
   ClearOutlined,
 } from '@ant-design/icons';
-import { createClient } from '@supabase/supabase-js';
+import { supabase, safeSupabaseCall, mockData } from '../../lib/supabase';
 
 const { Option } = Select;
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 interface Cell {
   id: string;
@@ -137,10 +132,13 @@ const ManagementMatrix: React.FC = () => {
 
   const loadMatrices = async () => {
     try {
-      const { data, error } = await supabase
-        .from('career_matrix_templates')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await safeSupabaseCall(
+        () => supabase
+          .from('career_matrix_templates')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        mockData.career_matrix_templates
+      );
 
       if (error) throw error;
 
