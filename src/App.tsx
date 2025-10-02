@@ -5,6 +5,7 @@ import locale from 'antd/locale/vi_VN';
 import MainLayout from './components/Layout/MainLayout';
 import ErrorBoundary from './components/ErrorBoundary';
 import DebugInfo from './components/DebugInfo';
+import EnvCheck from './components/EnvCheck';
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
 import CareerPaths from './pages/CareerPaths';
@@ -91,34 +92,36 @@ const theme = {
 function App() {
   return (
     <ErrorBoundary>
-      <ConfigProvider 
-        locale={locale} 
-        theme={theme}
-      >
-        <Router>
-          <MainLayout>
-            <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/employees" element={<Employees />} />
-              <Route path="/employees/:id" element={<EmployeeView />} />
-              <Route path="/career-paths" element={<CareerPaths />} />
-              <Route path="/personal-tracking" element={<PersonalTracking />} />
-              <Route path="/personal-tracking/:employeeId" element={<PersonalTrackingDetail />} />
-              <Route path="/career-roadmap" element={<CareerRoadmap />} />
-              <Route path="/career-roadmap/:professionId" element={<CareerRoadmapDetail />} />
-              <Route path="/job-comparison" element={<JobComparison />} />
-              <Route path="/development-matrix" element={<DevelopmentMatrix />} />
-              <Route path="/development-matrix/:employeeId" element={<DevelopmentMatrixDetail />} />
-              <Route path="/career-matrix" element={<CareerMatrix />} />
-              <Route path="/departments" element={<Departments />} />
-              <Route path="/upload" element={<Upload />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </MainLayout>
-        </Router>
-        <DebugInfo />
-      </ConfigProvider>
+      <EnvCheck>
+        <ConfigProvider 
+          locale={locale} 
+          theme={theme}
+        >
+          <Router>
+            <MainLayout>
+              <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/employees" element={<Employees />} />
+                <Route path="/employees/:id" element={<EmployeeView />} />
+                <Route path="/career-paths" element={<CareerPaths />} />
+                <Route path="/personal-tracking" element={<PersonalTracking />} />
+                <Route path="/personal-tracking/:employeeId" element={<PersonalTrackingDetail />} />
+                <Route path="/career-roadmap" element={<CareerRoadmap />} />
+                <Route path="/career-roadmap/:professionId" element={<CareerRoadmapDetail />} />
+                <Route path="/job-comparison" element={<JobComparison />} />
+                <Route path="/development-matrix" element={<DevelopmentMatrix />} />
+                <Route path="/development-matrix/:employeeId" element={<DevelopmentMatrixDetail />} />
+                <Route path="/career-matrix" element={<CareerMatrix />} />
+                <Route path="/departments" element={<Departments />} />
+                <Route path="/upload" element={<Upload />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </MainLayout>
+          </Router>
+          <DebugInfo />
+        </ConfigProvider>
+      </EnvCheck>
     </ErrorBoundary>
   );
 }
