@@ -4,20 +4,15 @@ import {
   DashboardOutlined,
   UserOutlined,
   SettingOutlined,
-  TeamOutlined,
   RiseOutlined,
   ApartmentOutlined,
   FileTextOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import viettelLogo from '../../public/assets/images/viettel.png';
 
 const { Sider } = Layout;
-
-const menuIconStyle = {
-  fontSize: '18px',
-  color: '#EF0032',
-};
 
 const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
   const navigate = useNavigate();
@@ -100,21 +95,31 @@ const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
       }}
     >
       <div
-        style={{
-          height: 64,
-          margin: '16px 16px 24px 16px',
-          background: 'linear-gradient(135deg, #EF0032 0%, #FF5B82 100%)',
-          borderRadius: 12,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          fontWeight: 'bold',
-          fontSize: '16px',
-          boxShadow: '0 4px 12px rgba(239, 0, 50, 0.3)',
-        }}
+        // style={{
+        //   height: 64,
+        //   margin: '16px 16px 24px 16px',
+        //   background: 'linear-gradient(135deg, #EF0032 0%, #FF5B82 100%)',
+        //   borderRadius: 12,
+        //   display: 'flex',
+        //   alignItems: 'center',
+        //   justifyContent: 'center',
+        //   color: 'white',
+        //   fontWeight: 'bold',
+        //   fontSize: '16px',
+        //   boxShadow: '0 4px 12px rgba(239, 0, 50, 0.3)',
+        // }}
       >
-        {collapsed ? 'VT' : 'VTNET CAREER'}
+        <img
+        src={viettelLogo}
+        alt="Viettel Logo"
+        style={{
+          height: collapsed ? '32px' : '48px', 
+            width: 'auto', 
+            maxWidth: '90%', 
+            objectFit: 'contain', 
+            marginLeft: '10px',
+        }}
+        />
       </div>
       <Menu
         theme="light"
